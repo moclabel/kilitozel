@@ -492,7 +492,8 @@
           { name: "Zorbey", x: 45470, y: 44102 },
           { name: "DeLeTe", x: 48216, y: 45929 },
           { name: "OxYGeN", x: 49958, y: 48070 },
-          { name: "GameOver", x: 23889, y: 39020 }
+          { name: "GameOver", x: 23889, y: 39020 },
+          { name: "Ulgart", x: 50094, y: 46175 }
         ]
       },
       "JJG": {
@@ -711,7 +712,6 @@
       });
     }
 
-    // Kilidi atacağın oyuncu seçildiğinde üst barda komutan adını anında güncelle
     function kilitKomutanGuncelle() {
       const seciliOyuncu = document.getElementById("kendiOyuncu").value;
       const headerName = document.getElementById("userDisplayName");
@@ -769,7 +769,6 @@
 
       birlikleriYukle();
 
-      // Varsayılan olarak TSK / ŞAH birliği ve PlayGame seçili gelsin
       if (BIRLIK_VERITABANI["TSK / ŞAH"]) {
         document.getElementById("kendiBirlik").value = "TSK / ŞAH";
         birlikSecildi("kendiBirlik", "kendiOyuncu", "kendiKoy");
@@ -859,7 +858,6 @@
       const savunanKoySelect = document.getElementById("savunanKoy");
       const savunanKoyAdi = savunanKoySelect.selectedIndex > 0 ? savunanKoySelect.options[savunanKoySelect.selectedIndex].text : `X: ${sx} | Y: ${sy}`;
 
-      // Kilidi atacak olan komutanı "Kendi Oyuncu" alanından dinamik çek
       const seciliKomutan = document.getElementById("kendiOyuncu").value || currentUser.name || "Komutan";
 
       sonFisMetni = `⚔️ TARGUN KİLİT OPERASYONU ⚔️\n` +
