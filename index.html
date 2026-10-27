@@ -18,6 +18,7 @@
       --border-color: #2e3646;
       --success-color: #10b981;
       --danger-color: #ef4444;
+      --info-color: #38bdf8;
     }
 
     * {
@@ -180,6 +181,34 @@
       margin-bottom: 10px;
     }
 
+    /* Canlı Düşman Yürüyüş Süresi Rozeti */
+    .enemy-travel-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px dashed var(--info-color);
+      border-radius: 8px;
+      padding: 9px 12px;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+
+    .enemy-travel-label {
+      color: var(--info-color);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .enemy-travel-val {
+      font-weight: 800;
+      color: #bae6fd;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+
     .calc-btn {
       background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
       color: #000;
@@ -284,8 +313,8 @@
       <div class="field">
         <label>Düşmanın Çıkış Köyü (Saldıran)</label>
         <div class="grid-2">
-          <input type="number" id="dx" placeholder="X (Örn: 9050)">
-          <input type="number" id="dy" placeholder="Y (Örn: 30950)">
+          <input type="number" id="dx" placeholder="X (Örn: 9050)" oninput="canliDusmanSuresiGuncelle()">
+          <input type="number" id="dy" placeholder="Y (Örn: 30950)" oninput="canliDusmanSuresiGuncelle()">
         </div>
       </div>
 
@@ -299,13 +328,13 @@
           <select id="savunanOyuncu" onchange="oyuncuSecildi('savunanBirlik', 'savunanOyuncu', 'savunanKoy')">
             <option value="">-- Önce Birlik Seç --</option>
           </select>
-          <select id="savunanKoy" onchange="koyKoorAta('savunanKoy', 'sx', 'sy')">
+          <select id="savunanKoy" onchange="koyKoorAta('savunanKoy', 'sx', 'sy'); canliDusmanSuresiGuncelle();">
             <option value="">-- Önce Oyuncu Seç --</option>
           </select>
         </div>
         <div class="grid-2">
-          <input type="number" id="sx" placeholder="X">
-          <input type="number" id="sy" placeholder="Y">
+          <input type="number" id="sx" placeholder="X" oninput="canliDusmanSuresiGuncelle()">
+          <input type="number" id="sy" placeholder="Y" oninput="canliDusmanSuresiGuncelle()">
         </div>
       </div>
 
@@ -316,7 +345,7 @@
           <div class="tab-btn" onclick="setDusmanIrk('GÖK', this)">🦅 GÖK</div>
           <div class="tab-btn" onclick="setDusmanIrk('SEL', this)">🏹 SEL</div>
         </div>
-        <select id="dusmanBirim"></select>
+        <select id="dusmanBirim" onchange="canliDusmanSuresiGuncelle()"></select>
       </div>
 
       <!-- SS:DD:SN Kutuları -->
@@ -335,6 +364,12 @@
           <div class="tab-btn active" onclick="setTab('dusmanTarz', 'normal', this)">🟢 Normal Geldi</div>
           <div class="tab-btn" onclick="setTab('dusmanTarz', 'elmas', this)">💎 Elmas Bastı</div>
         </div>
+      </div>
+
+      <!-- Canlı Tahmini Geliş Süresi -->
+      <div class="enemy-travel-box">
+        <span class="enemy-travel-label">⏱️ Tahmini Geliş / Yürüyüş Süresi:</span>
+        <span class="enemy-travel-val" id="canliDusmanSure">-</span>
       </div>
     </div>
 
@@ -639,6 +674,7 @@
       el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       el.classList.add("active");
       birimDoldur("dusmanBirim", irk);
+      canliDusmanSuresiGuncelle();
     }
 
     function setKendiIrk(irk, el) {
@@ -650,7 +686,10 @@
     }
 
     function setTab(type, val, el) {
-      if (type === "dusmanTarz") dusmanTarz = val;
+      if (type === "dusmanTarz") {
+        dusmanTarz = val;
+        canliDusmanSuresiGuncelle();
+      }
       if (type === "kendiTarz") kendiTarz = val;
       el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       el.classList.add("active");
@@ -752,6 +791,28 @@
       return `${s}:${dkk}:${sn}`;
     }
 
+    // ⚡ CANLI DÜŞMAN YÜRÜYÜŞ SÜRESİNİ HESAPLAYIP GÖSTEREN FONKSİYON
+    function canliDusmanSuresiGuncelle() {
+      const dx = parseFloat(document.getElementById("dx").value);
+      const dy = parseFloat(document.getElementById("dy").value);
+      const sx = parseFloat(document.getElementById("sx").value);
+      const sy = parseFloat(document.getElementById("sy").value);
+      const dHiz = parseFloat(document.getElementById("dusmanBirim").value);
+      const sureBox = document.getElementById("canliDusmanSure");
+
+      if (isNaN(dx) || isNaN(dy) || isNaN(sx) || isNaN(sy) || isNaN(dHiz)) {
+        sureBox.textContent = "Bilgiler Bekleniyor...";
+        return;
+      }
+
+      let dSure = sureHesapla(dx, dy, sx, sy, dHiz).toplamSaniye;
+      if (dusmanTarz === "elmas") {
+        dSure = Math.floor(dSure / 2);
+      }
+
+      sureBox.textContent = formatSure(dSure) + (dusmanTarz === "elmas" ? " 💎 (Elmaslı)" : "");
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("userDisplayName").textContent = currentUser.name;
       document.getElementById("userSubText").textContent = currentUser.username ? `${currentUser.username} • Targun Operasyon` : "Targun Operasyon";
@@ -787,6 +848,8 @@
       document.getElementById("savasSaat").value = String(now.getHours()).padStart(2, '0');
       document.getElementById("savasDakika").value = String(now.getMinutes()).padStart(2, '0');
       document.getElementById("savasSaniye").value = String(now.getSeconds()).padStart(2, '0');
+
+      canliDusmanSuresiGuncelle();
     });
 
     function kilitHesapla() {
@@ -866,6 +929,7 @@
                     `🏰 Çıkış Köyüm: ${cikisKoyAdi}\n` +
                     `🎯 Düşman Köyü (Dönüş): X: ${dx} | Y: ${dy}\n` +
                     `💂 Birim: ${secilenBirimAdi}\n` +
+                    `⏱️ Düşman Yürüyüş Süresi: ${formatSure(dusmanSure)}\n` +
                     `🕒 İniş / Kilit Saati: ${formatSaat(varisDate)}\n` +
                     `🚀 Asker Çıkış Saati: ${formatSaat(cikisDate)}` +
                     (gecKalindi ? `\n⚠️ DİKKAT: Çıkış zamanı geçmiştir!` : ``);
