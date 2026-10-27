@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Targun Kilit Hesaplayıcı</title>
+  <!-- Telegram Web App Script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: #0f1117;
+      --card-bg: #181c24;
+      --input-bg: #212631;
+      --accent-color: #f59e0b;
+      --accent-hover: #d97706;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #2e3646;
+      --success-color: #10b981;
+      --danger-color: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-bottom: 30px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(24, 28, 36, 0.5));
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 10px;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-weight: 700;
+      color: var(--accent-color);
+      font-size: 14px;
+    }
+
+    .user-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input[type="number"] {
+      text-align: center;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-color);
+    }
+
+    .tab-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .tab-btn {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background-color: rgba(245, 158, 11, 0.15);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .race-select {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .calc-btn {
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      color: #000;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .calc-btn:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+
+    #sonucCard {
+      display: none;
+      border-color: var(--success-color);
+      background-color: #111e1b;
+    }
+
+    #sonucCard.late {
+      border-color: var(--danger-color);
+      background-color: #1e1111;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-val {
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .highlight-time {
+      font-size: 18px;
+      color: #34d399;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .highlight-time.late {
+      color: #f87171;
+    }
+
+    .warning-badge {
+      display: none;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid var(--danger-color);
+      color: #fca5a5;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .copy-btn {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px;
+      border-radius: 8px;
+      width: 100%;
+      margin-top: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Kullanıcı Karşılama Kartı -->
+    <div class="user-header">
+      <div class="user-info">
+        <span class="user-name" id="userDisplayName">PlayGame</span>
+        <span class="user-tag" id="userSubText">Targun Operasyon</span>
+      </div>
+      <div style="font-size: 20px;">🛡️</div>
+    </div>
+
+    <!-- 1. Hedef Bilgileri -->
+    <div class="card">
+      <div class="card-title">🎯 Düşman & Hedef Bilgileri</div>
+      
+      <div class="field">
+        <label>Düşmanın Çıkış Köyü (Saldıran)</label>
+        <div class="grid-2">
+          <input type="number" id="dx" placeholder="X (Örn: 9050)">
+          <input type="number" id="dy" placeholder="Y (Örn: 30950)">
+        </div>
+      </div>
+
+      <!-- Savunan Köy (Birlik -> Oyuncu -> Köy Seçimi) -->
+      <div class="field">
+        <label>Saldırılan Yer (Savunan Köy)</label>
+        <select id="savunanBirlik" onchange="birlikSecildi('savunanBirlik', 'savunanOyuncu', 'savunanKoy')" style="margin-bottom: 6px;">
+          <option value="">-- Birlik Seç --</option>
+        </select>
+        <div class="grid-2" style="margin-bottom: 6px;">
+          <select id="savunanOyuncu" onchange="oyuncuSecildi('savunanBirlik', 'savunanOyuncu', 'savunanKoy')">
+            <option value="">-- Önce Birlik Seç --</option>
+          </select>
+          <select id="savunanKoy" onchange="koyKoorAta('savunanKoy', 'sx', 'sy')">
+            <option value="">-- Önce Oyuncu Seç --</option>
+          </select>
+        </div>
+        <div class="grid-2">
+          <input type="number" id="sx" placeholder="X">
+          <input type="number" id="sy" placeholder="Y">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Düşmanın En Yavaş Birimi</label>
+        <div class="race-select" id="dusmanIrkGroup">
+          <div class="tab-btn active" onclick="setDusmanIrk('HUN', this)">🐺 HUN</div>
+          <div class="tab-btn" onclick="setDusmanIrk('GÖK', this)">🦅 GÖK</div>
+          <div class="tab-btn" onclick="setDusmanIrk('SEL', this)">🏹 SEL</div>
+        </div>
+        <select id="dusmanBirim"></select>
+      </div>
+
+      <!-- SS:DD:SN Kutuları -->
+      <div class="field">
+        <label>Saldırının Vurma / Çarpma Saati (SS : DD : SN)</label>
+        <div class="grid-3">
+          <input type="number" id="savasSaat" placeholder="Saat" min="0" max="23" inputmode="numeric">
+          <input type="number" id="savasDakika" placeholder="Dakika" min="0" max="59" inputmode="numeric">
+          <input type="number" id="savasSaniye" placeholder="Saniye" min="0" max="59" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Düşman Hareketi</label>
+        <div class="tab-group">
+          <div class="tab-btn active" onclick="setTab('dusmanTarz', 'normal', this)">🟢 Normal Geldi</div>
+          <div class="tab-btn" onclick="setTab('dusmanTarz', 'elmas', this)">💎 Elmas Bastı</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Kendi Kilit Bilgilerin -->
+    <div class="card">
+      <div class="card-title">🛡️ Senin Çıkış ve Ordu Bilgilerin</div>
+      
+      <!-- Çıkış Köyü (Birlik -> Oyuncu -> Köy Seçimi) -->
+      <div class="field">
+        <label>Kilidi Atacağın Köyün (Senin Konumun)</label>
+        <select id="kendiBirlik" onchange="birlikSecildi('kendiBirlik', 'kendiOyuncu', 'kendiKoy')" style="margin-bottom: 6px;">
+          <option value="">-- Birlik Seç --</option>
+        </select>
+        <div class="grid-2" style="margin-bottom: 6px;">
+          <select id="kendiOyuncu" onchange="oyuncuSecildi('kendiBirlik', 'kendiOyuncu', 'kendiKoy')">
+            <option value="">-- Önce Birlik Seç --</option>
+          </select>
+          <select id="kendiKoy" onchange="koyKoorAta('kendiKoy', 'kx', 'ky')">
+            <option value="">-- Önce Oyuncu Seç --</option>
+          </select>
+        </div>
+        <div class="grid-2">
+          <input type="number" id="kx" placeholder="X">
+          <input type="number" id="ky" placeholder="Y">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Göndereceğin En Yavaş Birim</label>
+        <div class="race-select" id="kendiIrkGroup">
+          <div class="tab-btn active" onclick="setKendiIrk('HUN', this)">🐺 HUN</div>
+          <div class="tab-btn" onclick="setKendiIrk('GÖK', this)">🦅 GÖK</div>
+          <div class="tab-btn" onclick="setKendiIrk('SEL', this)">🏹 SEL</div>
+        </div>
+        <select id="kendiBirim"></select>
+      </div>
+
+      <div class="field">
+        <label>Senin Saldırı Tarzın</label>
+        <div class="tab-group">
+          <div class="tab-btn active" onclick="setTab('kendiTarz', 'normal', this)">🟢 Normal Gideceğim</div>
+          <div class="tab-btn" onclick="setTab('kendiTarz', 'elmas', this)">💎 Elmas Basacağım</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="kilitHesapla()">🔒 KİLİDİ HESAPLA</button>
+
+    <!-- Sonuç Kartı -->
+    <div class="card" id="sonucCard">
+      <div class="card-title" id="cardHeaderTitle" style="color: #34d399;">⚔️ Kilit Operasyon Planı</div>
+      
+      <div class="result-row">
+        <span>Düşmanın Dönüş Saati:</span>
+        <span class="result-val" id="resDonus">-</span>
+      </div>
+      <div class="result-row">
+        <span>Senin Gidiş Süren:</span>
+        <span class="result-val" id="resSure">-</span>
+      </div>
+      <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+        <span style="font-weight:700;">🚀 ASKER ÇIKIŞ SAATİN:</span>
+        <span class="highlight-time" id="resCikis">-</span>
+      </div>
+
+      <div id="warningBadge" class="warning-badge">⚠️ DİKKAT: Çıkış saati geçmişte kaldı! Bu birimle kilide yetişilemez.</div>
+
+      <button class="copy-btn" onclick="kopyalaFis()">📋 Operasyon Fişini Kopyala</button>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 🗂️ BİRLİK, OYUNCU VE KÖY VERİTABANI
+    // ==========================================
+    const BIRLIK_VERITABANI = {
+      "TSK / ŞAH": {
+        "PlayGame": [
+          { name: "merkez", x: 34250, y: 40050 },
+          { name: "BEREKET", x: 37470, y: 36967 },
+          { name: "MERHAMET", x: 46386, y: 38149 },
+          { name: "CESARET", x: 55235, y: 40371 },
+          { name: "ŞEHADET", x: 55241, y: 42482 },
+          { name: "KUVVET", x: 54491, y: 45972 },
+          { name: "FÜTÜVVET", x: 50740, y: 48772 },
+          { name: "RAHMET", x: 54775, y: 49595 },
+          { name: "ASALET", x: 24846, y: 40630 },
+          { name: "İSLAMİYET", x: 23874, y: 38636 }
+        ],
+        "GameOver": [
+          { name: "merkez", x: 22550, y: 37950 },
+          { name: "İskender", x: 22892, y: 37552 },
+          { name: "Venom", x: 17722, y: 43858 },
+          { name: "Kuzey", x: 28418, y: 34882 },
+          { name: "KILIÇ", x: 35675, y: 35486 },
+          { name: "Ses geliyor", x: 39314, y: 38125 },
+          { name: "Kahraman", x: 38307, y: 45598 },
+          { name: "PlayGame", x: 32952, y: 44595 },
+          { name: "Moclabel", x: 43365, y: 43905 },
+          { name: "Hunter", x: 50884, y: 38503 }
+        ],
+        "Ulgart": [
+          { name: "merkez", x: 44150, y: 32350 },
+          { name: "İki", x: 42613, y: 35396 },
+          { name: "Üç", x: 45492, y: 31513 },
+          { name: "Dört", x: 40014, y: 30011 },
+          { name: "Beş", x: 35512, y: 32641 },
+          { name: "Altı", x: 31194, y: 31364 },
+          { name: "Yedi", x: 48324, y: 39546 },
+          { name: "Sekiz", x: 49995, y: 44333 },
+          { name: "Dokuz", x: 38141, y: 23676 }
+        ],
+        "HuNTER": [
+          { name: "merkez", x: 41450, y: 28850 },
+          { name: "X1X", x: 41925, y: 30934 },
+          { name: "XX1", x: 50710, y: 32651 },
+          { name: "X.X", x: 53559, y: 37604 },
+          { name: "X!X", x: 55548, y: 35268 },
+          { name: "XNX", x: 55400, y: 37154 },
+          { name: "X2X", x: 50904, y: 35335 },
+          { name: "XYX", x: 46375, y: 26512 },
+          { name: "XZX", x: 53659, y: 46562 },
+          { name: "Mdkd", x: 39348, y: 21561 }
+        ],
+        "SES": [
+          { name: "merkez", x: 39650, y: 37250 },
+          { name: "2", x: 36590, y: 43091 },
+          { name: "3", x: 40135, y: 43542 },
+          { name: "4", x: 47569, y: 49612 },
+          { name: "5", x: 33996, y: 44672 },
+          { name: "Moclabel 6", x: 54520, y: 49157 },
+          { name: "PlayGame 7", x: 42873, y: 30374 },
+          { name: "Zorbey 8", x: 55462, y: 44016 },
+          { name: "Cakabey 9", x: 50918, y: 35821 },
+          { name: "10", x: 30223, y: 46795 }
+        ],
+        "Zorbey": [
+          { name: "merkez", x: 43250, y: 30250 },
+          { name: "Nevşehir", x: 42786, y: 28905 },
+          { name: "Zorbey2-", x: 50944, y: 32602 },
+          { name: "Ürgüp-", x: 53607, y: 38474 },
+          { name: "Gülşehir", x: 55485, y: 36751 },
+          { name: "Avanos", x: 53358, y: 26372 },
+          { name: "Kozaklı", x: 55361, y: 28791 },
+          { name: "Acıgöl", x: 42717, y: 33127 },
+          { name: "Göreme", x: 55347, y: 39286 },
+          { name: "Son", x: 38346, y: 25800 }
+        ],
+        "Moclabel": [
+          { name: "merkez", x: 30650, y: 42850 },
+          { name: "Kuzeydoğu", x: 31263, y: 41829 },
+          { name: "Güneydoğu", x: 32099, y: 42381 },
+          { name: "Playgame", x: 40246, y: 45994 },
+          { name: "Sess", x: 43836, y: 48830 },
+          { name: "Zorbey", x: 45470, y: 44102 },
+          { name: "DeLeTe", x: 48216, y: 45929 },
+          { name: "OxYGeN", x: 49958, y: 48070 },
+          { name: "GameOver", x: 23889, y: 39020 }
+        ]
+      },
+      "JJG": {
+        "YAMAHA": [
+          { name: "merkez", x: 29750, y: 34450 },
+          { name: "Suzuki", x: 31093, y: 33602 },
+          { name: "AGusTa", x: 32895, y: 43384 },
+          { name: "Jawa", x: 41229, y: 45287 },
+          { name: "DuCaTi", x: 47392, y: 44981 },
+          { name: "HONDA", x: 55166, y: 48820 },
+          { name: "BMW", x: 50953, y: 40475 },
+          { name: "Kawasaki", x: 48282, y: 48004 }
+        ],
+        "VeLeNsO": [
+          { name: "merkez", x: 36050, y: 36550 },
+          { name: "Mengücek", x: 33716, y: 34823 },
+          { name: "Oğuzlar", x: 33834, y: 38481 },
+          { name: "Altın", x: 37419, y: 26279 },
+          { name: "Karışık", x: 41915, y: 19141 },
+          { name: "Kırışık", x: 44554, y: 34980 },
+          { name: "Kd", x: 48169, y: 41549 },
+          { name: "Jjg", x: 54347, y: 45362 },
+          { name: "Dost", x: 52664, y: 46467 }
+        ],
+        "Alia": [
+          { name: "merkez", x: 38750, y: 36550 },
+          { name: "Mordor", x: 41048, y: 44133 },
+          { name: "Gondor", x: 46394, y: 46671 },
+          { name: "Luksor", x: 40131, y: 36807 },
+          { name: "Angkor", x: 36636, y: 37048 },
+          { name: "Bangor", x: 45555, y: 46784 },
+          { name: "Hektor", x: 47293, y: 48497 },
+          { name: "Nestor", x: 49458, y: 49688 },
+          { name: "Victor", x: 42677, y: 29689 }
+        ],
+        "GOKKURT": [
+          { name: "merkez", x: 44150, y: 35150 },
+          { name: "Kızılkayalar", x: 45404, y: 38336 },
+          { name: "Ağlayankaya", x: 44826, y: 28484 },
+          { name: "Yeşilkayalar", x: 40846, y: 39555 },
+          { name: "Morkayalar", x: 34760, y: 35614 },
+          { name: "Gülenkayalar", x: 44496, y: 43184 },
+          { name: "Ateşkayalar", x: 52691, y: 48029 },
+          { name: "Kayankayalar", x: 55260, y: 47440 },
+          { name: "Pempekayalar", x: 50007, y: 35358 }
+        ],
+        "Bzage": [
+          { name: "merkez", x: 36950, y: 41450 },
+          { name: "Mışe", x: 36502, y: 41578 },
+          { name: "Baje", x: 38273, y: 42852 },
+          { name: "Duğuj", x: 41978, y: 43868 },
+          { name: "Mezged", x: 49088, y: 45129 },
+          { name: "Bğa", x: 50863, y: 44803 },
+          { name: "Jınduğ", x: 50713, y: 46649 },
+          { name: "Mezbjen", x: 47385, y: 48896 },
+          { name: "Vuğje", x: 55518, y: 38005 },
+          { name: "KDJJK", x: 50853, y: 48444 }
+        ],
+        "Negolen": [
+          { name: "merkez", x: 41450, y: 37950 },
+          { name: "İstekan", x: 36410, y: 41768 },
+          { name: "Nıbaje", x: 37466, y: 43730 },
+          { name: "Psıhalıve", x: 40876, y: 44606 },
+          { name: "Psıne", x: 50011, y: 43653 },
+          { name: "Şemeg", x: 49925, y: 46091 },
+          { name: "Psı", x: 49187, y: 39131 },
+          { name: "Psıfaale", x: 55410, y: 38543 },
+          { name: "Kaptan", x: 50067, y: 49389 },
+          { name: "ABİDİKA", x: 49966, y: 48938 }
+        ],
+        "Belisarius": [
+          { name: "merkez", x: 36950, y: 31650 },
+          { name: "Livane", x: 38201, y: 32032 },
+          { name: "Hungimek", x: 42719, y: 36626 },
+          { name: "Cimlet", x: 47262, y: 44480 },
+          { name: "Mayet", x: 44454, y: 47988 },
+          { name: "Haretket", x: 47368, y: 46120 },
+          { name: "Yuvanet", x: 47069, y: 49729 },
+          { name: "Marsege", x: 54411, y: 48798 },
+          { name: "Dabget", x: 45553, y: 27441 },
+          { name: "Ada Yayla", x: 47199, y: 29971 }
+        ]
+      }
+    };
+
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    let currentUser = { name: "PlayGame", username: "", id: "local" };
+
+    if (tg) {
+      tg.expand();
+      tg.ready();
+      if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const u = tg.initDataUnsafe.user;
+        currentUser.name = u.first_name + (u.last_name ? " " + u.last_name : "");
+        currentUser.username = u.username ? `@${u.username}` : "";
+        currentUser.id = u.id;
+      }
+    }
+
+    const BIRIMLER = {
+      HUN: [
+        { name: "Toygun", speed: 125 }, { name: "Kemankeş", speed: 145 },
+        { name: "Tarık", speed: 110 }, { name: "Barlas", speed: 135 },
+        { name: "Tunga", speed: 175 }, { name: "Talakan", speed: 230 },
+        { name: "Tarkan", speed: 195 }, { name: "Mancınık", speed: 50 },
+        { name: "Topçu", speed: 60 }, { name: "Casus", speed: 300 }
+      ],
+      GÖK: [
+        { name: "Karabudun", speed: 120 }, { name: "Kemankeş", speed: 140 },
+        { name: "Tapukçi", speed: 100 }, { name: "Mavi Kurt", speed: 130 },
+        { name: "Muhafız", speed: 150 }, { name: "Mavi Atlı", speed: 200 },
+        { name: "Kürşad", speed: 180 }, { name: "Mancınık", speed: 50 },
+        { name: "Topçu", speed: 60 }, { name: "Casus", speed: 300 }
+      ],
+      SEL: [
+        { name: "Gulam", speed: 115 }, { name: "Kemankeş", speed: 135 },
+        { name: "Selçuk", speed: 105 }, { name: "Alparslan", speed: 125 },
+        { name: "Kargılı", speed: 160 }, { name: "Atlı Okçu", speed: 225 },
+        { name: "Sipahi", speed: 175 }, { name: "Mancınık", speed: 50 },
+        { name: "Topçu", speed: 60 }, { name: "Casus", speed: 300 }
+      ]
+    };
+
+    let seciliDusmanIrk = "HUN";
+    let seciliKendiIrk = localStorage.getItem(`targun_irk_${currentUser.id}`) || "HUN";
+    let dusmanTarz = "normal";
+    let kendiTarz = "normal";
+    let sonFisMetni = "";
+
+    function birimDoldur(selectId, irk) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+      BIRIMLER[irk].forEach(b => {
+        const opt = document.createElement("option");
+        opt.value = b.speed;
+        opt.textContent = `${b.name} (${b.speed})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function setDusmanIrk(irk, el) {
+      seciliDusmanIrk = irk;
+      el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+      birimDoldur("dusmanBirim", irk);
+    }
+
+    function setKendiIrk(irk, el) {
+      seciliKendiIrk = irk;
+      localStorage.setItem(`targun_irk_${currentUser.id}`, irk);
+      el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+      birimDoldur("kendiBirim", irk);
+    }
+
+    function setTab(type, val, el) {
+      if (type === "dusmanTarz") dusmanTarz = val;
+      if (type === "kendiTarz") kendiTarz = val;
+      el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+    }
+
+    // 1. Aşama: Birlikleri Doldur
+    function birlikleriYukle() {
+      const birlikler = Object.keys(BIRLIK_VERITABANI);
+      ["savunanBirlik", "kendiBirlik"].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = '<option value="">-- Birlik Seç --</option>';
+        birlikler.forEach(birlikAdi => {
+          const opt = document.createElement("option");
+          opt.value = birlikAdi;
+          opt.textContent = `🛡️ ${birlikAdi}`;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    // 2. Aşama: Birlik Seçilince Oyuncuları Doldur
+    function birlikSecildi(birlikSelectId, oyuncuSelectId, koySelectId) {
+      const birlikAdi = document.getElementById(birlikSelectId).value;
+      const oyuncuSelect = document.getElementById(oyuncuSelectId);
+      const koySelect = document.getElementById(koySelectId);
+
+      oyuncuSelect.innerHTML = '<option value="">-- Oyuncu Seç --</option>';
+      koySelect.innerHTML = '<option value="">-- Önce Oyuncu Seç --</option>';
+
+      if (!birlikAdi || !BIRLIK_VERITABANI[birlikAdi]) {
+        oyuncuSelect.innerHTML = '<option value="">-- Önce Birlik Seç --</option>';
+        return;
+      }
+
+      const oyuncular = Object.keys(BIRLIK_VERITABANI[birlikAdi]);
+      oyuncular.forEach(oyuncuAdi => {
+        const opt = document.createElement("option");
+        opt.value = oyuncuAdi;
+        opt.textContent = oyuncuAdi;
+        oyuncuSelect.appendChild(opt);
+      });
+    }
+
+    // 3. Aşama: Oyuncu Seçilince Köyleri Doldur
+    function oyuncuSecildi(birlikSelectId, oyuncuSelectId, koySelectId) {
+      const birlikAdi = document.getElementById(birlikSelectId).value;
+      const oyuncuAdi = document.getElementById(oyuncuSelectId).value;
+      const koySelect = document.getElementById(koySelectId);
+
+      koySelect.innerHTML = '<option value="">-- Köy Seç --</option>';
+
+      if (!birlikAdi || !oyuncuAdi || !BIRLIK_VERITABANI[birlikAdi] || !BIRLIK_VERITABANI[birlikAdi][oyuncuAdi]) {
+        koySelect.innerHTML = '<option value="">-- Önce Oyuncu Seç --</option>';
+        return;
+      }
+
+      BIRLIK_VERITABANI[birlikAdi][oyuncuAdi].forEach(koy => {
+        const opt = document.createElement("option");
+        opt.value = `${koy.x},${koy.y}`;
+        opt.textContent = `${koy.name} (${koy.x}|${koy.y})`;
+        koySelect.appendChild(opt);
+      });
+    }
+
+    // 4. Aşama: Köy Seçilince Koordinatları Ata
+    function koyKoorAta(koySelectId, targetXId, targetYId) {
+      const val = document.getElementById(koySelectId).value;
+      if (!val) return;
+      const [x, y] = val.split(",");
+      document.getElementById(targetXId).value = x;
+      document.getElementById(targetYId).value = y;
+    }
+
+    function sureHesapla(x1, y1, x2, y2, hiz) {
+      const mesafe = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+      const gercekHiz = hiz * 1.19995;
+      const sureDakika = mesafe / gercekHiz;
+      const toplamSaniye = Math.floor(sureDakika * 60) + 1;
+      return { mesafe, toplamSaniye };
+    }
+
+    function formatSure(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return h > 0 ? `${h} sa ${m} dk ${s} sn` : `${m} dk ${s} sn`;
+    }
+
+    function formatSaat(d) {
+      const s = String(d.getHours()).padStart(2, '0');
+      const dkk = String(d.getMinutes()).padStart(2, '0');
+      const sn = String(d.getSeconds()).padStart(2, '0');
+      return `${s}:${dkk}:${sn}`;
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("userDisplayName").textContent = currentUser.name;
+      document.getElementById("userSubText").textContent = currentUser.username ? `${currentUser.username} • Targun Operasyon` : "Targun Operasyon";
+
+      birimDoldur("dusmanBirim", seciliDusmanIrk);
+      birimDoldur("kendiBirim", seciliKendiIrk);
+
+      document.querySelectorAll("#kendiIrkGroup .tab-btn").forEach(btn => {
+        if (btn.textContent.includes(seciliKendiIrk)) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+
+      birlikleriYukle();
+
+      // Varsayılan olarak TSK / ŞAH birliği ve PlayGame seçili gelsin
+      if (BIRLIK_VERITABANI["TSK / ŞAH"]) {
+        document.getElementById("kendiBirlik").value = "TSK / ŞAH";
+        birlikSecildi("kendiBirlik", "kendiOyuncu", "kendiKoy");
+        document.getElementById("kendiOyuncu").value = "PlayGame";
+        oyuncuSecildi("kendiBirlik", "kendiOyuncu", "kendiKoy");
+
+        document.getElementById("savunanBirlik").value = "TSK / ŞAH";
+        birlikSecildi("savunanBirlik", "savunanOyuncu", "savunanKoy");
+        document.getElementById("savunanOyuncu").value = "PlayGame";
+        oyuncuSecildi("savunanBirlik", "savunanOyuncu", "savunanKoy");
+      }
+
+      const now = new Date();
+      document.getElementById("savasSaat").value = String(now.getHours()).padStart(2, '0');
+      document.getElementById("savasDakika").value = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById("savasSaniye").value = String(now.getSeconds()).padStart(2, '0');
+    });
+
+    function kilitHesapla() {
+      const dx = parseFloat(document.getElementById("dx").value);
+      const dy = parseFloat(document.getElementById("dy").value);
+      const sx = parseFloat(document.getElementById("sx").value);
+      const sy = parseFloat(document.getElementById("sy").value);
+      const kx = parseFloat(document.getElementById("kx").value);
+      const ky = parseFloat(document.getElementById("ky").value);
+
+      const h = parseInt(document.getElementById("savasSaat").value, 10);
+      const m = parseInt(document.getElementById("savasDakika").value, 10);
+      const s = parseInt(document.getElementById("savasSaniye").value, 10);
+
+      if (isNaN(dx) || isNaN(dy) || isNaN(sx) || isNaN(sy) || isNaN(kx) || isNaN(ky)) {
+        alert("Lütfen tüm koordinatları eksiksiz girin.");
+        return;
+      }
+
+      if (isNaN(h) || isNaN(m) || isNaN(s) || h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+        alert("Lütfen geçerli bir saat (0-23), dakika (0-59) ve saniye (0-59) girin.");
+        return;
+      }
+
+      const dHiz = parseFloat(document.getElementById("dusmanBirim").value);
+      const kHiz = parseFloat(document.getElementById("kendiBirim").value);
+
+      const savasDate = new Date();
+      savasDate.setHours(h, m, s, 0);
+
+      let dusmanSure = sureHesapla(dx, dy, sx, sy, dHiz).toplamSaniye;
+      if (dusmanTarz === "elmas") dusmanSure = Math.floor(dusmanSure / 2);
+      const varisDate = new Date(savasDate.getTime() + dusmanSure * 1000);
+
+      let kendiSure = sureHesapla(kx, ky, dx, dy, kHiz).toplamSaniye;
+      if (kendiTarz === "elmas") kendiSure = Math.floor(kendiSure / 2);
+      const cikisDate = new Date(varisDate.getTime() - kendiSure * 1000);
+
+      const suAn = new Date();
+      const gecKalindi = cikisDate.getTime() < suAn.getTime();
+
+      const card = document.getElementById("sonucCard");
+      const resCikisEl = document.getElementById("resCikis");
+      const warningBadge = document.getElementById("warningBadge");
+      const cardHeaderTitle = document.getElementById("cardHeaderTitle");
+
+      if (gecKalindi) {
+        card.classList.add("late");
+        resCikisEl.classList.add("late");
+        warningBadge.style.display = "block";
+        cardHeaderTitle.style.color = "var(--danger-color)";
+      } else {
+        card.classList.remove("late");
+        resCikisEl.classList.remove("late");
+        warningBadge.style.display = "none";
+        cardHeaderTitle.style.color = "var(--success-color)";
+      }
+
+      document.getElementById("resDonus").textContent = formatSaat(varisDate);
+      document.getElementById("resSure").textContent = formatSure(kendiSure);
+      resCikisEl.textContent = formatSaat(cikisDate);
+      
+      const kSelect = document.getElementById("kendiBirim");
+      const secilenBirimAdi = kSelect.options[kSelect.selectedIndex].text;
+      
+      const cikisKoySelect = document.getElementById("kendiKoy");
+      const cikisKoyAdi = cikisKoySelect.selectedIndex > 0 ? cikisKoySelect.options[cikisKoySelect.selectedIndex].text : `X: ${kx} | Y: ${ky}`;
+
+      const savunanKoySelect = document.getElementById("savunanKoy");
+      const savunanKoyAdi = savunanKoySelect.selectedIndex > 0 ? savunanKoySelect.options[savunanKoySelect.selectedIndex].text : `X: ${sx} | Y: ${sy}`;
+
+      sonFisMetni = `⚔️ TARGUN KİLİT OPERASYONU ⚔️\n` +
+                    `👤 Komutan: ${currentUser.name} ${currentUser.username}\n` +
+                    `🛡️ Savunan Hedef: ${savunanKoyAdi}\n` +
+                    `🏰 Çıkış Köyüm: ${cikisKoyAdi}\n` +
+                    `🎯 Düşman Köyü (Dönüş): X: ${dx} | Y: ${dy}\n` +
+                    `💂 Birim: ${secilenBirimAdi}\n` +
+                    `🕒 İniş / Kilit Saati: ${formatSaat(varisDate)}\n` +
+                    `🚀 Asker Çıkış Saati: ${formatSaat(cikisDate)}` +
+                    (gecKalindi ? `\n⚠️ DİKKAT: Çıkış zamanı geçmiştir!` : ``);
+
+      card.style.display = "block";
+      card.scrollIntoView({ behavior: 'smooth' });
+
+      if (tg && tg.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred(gecKalindi ? "error" : "success");
+      }
+    }
+
+    function kopyalaFis() {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(sonFisMetni).then(() => {
+          alert("Operasyon fişi panoya kopyalandı!");
+        }).catch(() => fallbackKopyala());
+      } else {
+        fallbackKopyala();
+      }
+    }
+
+    function fallbackKopyala() {
+      const textarea = document.createElement("textarea");
+      textarea.value = sonFisMetni;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+        alert("Operasyon fişi panoya kopyalandı!");
+      } catch (err) {
+        alert("Kopyalama başarısız oldu, manuel kopyalayın.");
+      }
+      document.body.removeChild(textarea);
+    }
+  </script>
+</body>
+</html>
