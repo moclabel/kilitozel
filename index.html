@@ -349,7 +349,7 @@
           <option value="">-- Birlik Seç --</option>
         </select>
         <div class="grid-2" style="margin-bottom: 6px;">
-          <select id="kendiOyuncu" onchange="oyuncuSecildi('kendiBirlik', 'kendiOyuncu', 'kendiKoy')">
+          <select id="kendiOyuncu" onchange="oyuncuSecildi('kendiBirlik', 'kendiOyuncu', 'kendiKoy'); kilitKomutanGuncelle();">
             <option value="">-- Önce Birlik Seç --</option>
           </select>
           <select id="kendiKoy" onchange="koyKoorAta('kendiKoy', 'kx', 'ky')">
@@ -579,7 +579,7 @@
     };
 
     const tg = window.Telegram ? window.Telegram.WebApp : null;
-    let currentUser = { name: "PlayGame", username: "", id: "local" };
+    let currentUser = { name: "Komutan", username: "", id: "local" };
 
     if (tg) {
       tg.expand();
@@ -655,7 +655,6 @@
       el.classList.add("active");
     }
 
-    // 1. Aşama: Birlikleri Doldur
     function birlikleriYukle() {
       const birlikler = Object.keys(BIRLIK_VERITABANI);
       ["savunanBirlik", "kendiBirlik"].forEach(id => {
@@ -670,7 +669,6 @@
       });
     }
 
-    // 2. Aşama: Birlik Seçilince Oyuncuları Doldur
     function birlikSecildi(birlikSelectId, oyuncuSelectId, koySelectId) {
       const birlikAdi = document.getElementById(birlikSelectId).value;
       const oyuncuSelect = document.getElementById(oyuncuSelectId);
@@ -693,7 +691,6 @@
       });
     }
 
-    // 3. Aşama: Oyuncu Seçilince Köyleri Doldur
     function oyuncuSecildi(birlikSelectId, oyuncuSelectId, koySelectId) {
       const birlikAdi = document.getElementById(birlikSelectId).value;
       const oyuncuAdi = document.getElementById(oyuncuSelectId).value;
@@ -714,7 +711,17 @@
       });
     }
 
-    // 4. Aşama: Köy Seçilince Koordinatları Ata
+    // Kilidi atacağın oyuncu seçildiğinde üst barda komutan adını anında güncelle
+    function kilitKomutanGuncelle() {
+      const seciliOyuncu = document.getElementById("kendiOyuncu").value;
+      const headerName = document.getElementById("userDisplayName");
+      if (seciliOyuncu) {
+        headerName.textContent = seciliOyuncu;
+      } else {
+        headerName.textContent = currentUser.name || "Komutan";
+      }
+    }
+
     function koyKoorAta(koySelectId, targetXId, targetYId) {
       const val = document.getElementById(koySelectId).value;
       if (!val) return;
@@ -773,6 +780,8 @@
         birlikSecildi("savunanBirlik", "savunanOyuncu", "savunanKoy");
         document.getElementById("savunanOyuncu").value = "PlayGame";
         oyuncuSecildi("savunanBirlik", "savunanOyuncu", "savunanKoy");
+        
+        kilitKomutanGuncelle();
       }
 
       const now = new Date();
@@ -850,8 +859,11 @@
       const savunanKoySelect = document.getElementById("savunanKoy");
       const savunanKoyAdi = savunanKoySelect.selectedIndex > 0 ? savunanKoySelect.options[savunanKoySelect.selectedIndex].text : `X: ${sx} | Y: ${sy}`;
 
+      // Kilidi atacak olan komutanı "Kendi Oyuncu" alanından dinamik çek
+      const seciliKomutan = document.getElementById("kendiOyuncu").value || currentUser.name || "Komutan";
+
       sonFisMetni = `⚔️ TARGUN KİLİT OPERASYONU ⚔️\n` +
-                    `👤 Komutan: ${currentUser.name} ${currentUser.username}\n` +
+                    `👤 Komutan: ${seciliKomutan}\n` +
                     `🛡️ Savunan Hedef: ${savunanKoyAdi}\n` +
                     `🏰 Çıkış Köyüm: ${cikisKoyAdi}\n` +
                     `🎯 Düşman Köyü (Dönüş): X: ${dx} | Y: ${dy}\n` +
