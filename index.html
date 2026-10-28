@@ -19,6 +19,7 @@
       --success-color: #10b981;
       --danger-color: #ef4444;
       --info-color: #38bdf8;
+      --detect-bg: #1a2234;
     }
 
     * {
@@ -44,6 +45,46 @@
       flex-direction: column;
       gap: 14px;
       padding-bottom: 30px;
+    }
+
+    /* Ana Üst Sekmeler */
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background-color: var(--card-bg);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .nav-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .nav-tab-btn.active {
+      background-color: rgba(245, 158, 11, 0.15);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .tab-content {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tab-content.active {
+      display: flex;
     }
 
     .card {
@@ -176,12 +217,75 @@
 
     .race-select {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       margin-bottom: 10px;
     }
 
-    /* Canlı Düşman Yürüyüş Süresi Rozeti */
+    .race-select-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .btn-detect {
+      background-color: var(--info-color);
+      color: #0b1120;
+      font-weight: 700;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      width: 100%;
+      margin-top: 10px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-detect:active {
+      opacity: 0.85;
+    }
+
+    .detect-results {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .detect-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .detect-item:hover {
+      border-color: var(--info-color);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .detect-tag {
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .detect-diff {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .diff-exact { color: #34d399; }
+    .diff-close { color: #facc15; }
+    .diff-far { color: #f87171; }
+
     .enemy-travel-box {
       display: flex;
       justify-content: space-between;
@@ -306,145 +410,214 @@
       <div style="font-size: 20px;">🛡️</div>
     </div>
 
-    <!-- 1. Hedef Bilgileri -->
-    <div class="card">
-      <div class="card-title">🎯 Düşman & Hedef Bilgileri</div>
-      
-      <div class="field">
-        <label>Düşmanın Çıkış Köyü (Saldıran)</label>
-        <div class="grid-2">
-          <input type="number" id="dx" placeholder="X (Örn: 9050)" oninput="canliDusmanSuresiGuncelle()">
-          <input type="number" id="dy" placeholder="Y (Örn: 30950)" oninput="canliDusmanSuresiGuncelle()">
-        </div>
-      </div>
+    <!-- ÜST ANA SEKME BUTONLARI -->
+    <div class="nav-tabs">
+      <button class="nav-tab-btn active" onclick="switchNavTab('kilitSekme', this)">🔒 Kilit Hesaplayıcı</button>
+      <button class="nav-tab-btn" onclick="switchNavTab('bulucuSekme', this)">🔍 Birim Bulucu</button>
+    </div>
 
-      <!-- Savunan Köy (Birlik -> Oyuncu -> Köy Seçimi) -->
-      <div class="field">
-        <label>Saldırılan Yer (Savunan Köy)</label>
-        <select id="savunanBirlik" onchange="birlikSecildi('savunanBirlik', 'savunanOyuncu', 'savunanKoy')" style="margin-bottom: 6px;">
-          <option value="">-- Birlik Seç --</option>
-        </select>
-        <div class="grid-2" style="margin-bottom: 6px;">
-          <select id="savunanOyuncu" onchange="oyuncuSecildi('savunanBirlik', 'savunanOyuncu', 'savunanKoy')">
-            <option value="">-- Önce Birlik Seç --</option>
+    <!-- ============================================== -->
+    <!-- 1. SEKME: KİLİT HESAPLAYICI -->
+    <!-- ============================================== -->
+    <div id="kilitSekme" class="tab-content active">
+      <div class="card">
+        <div class="card-title">🎯 Düşman & Hedef Bilgileri</div>
+        
+        <!-- Düşmanın Çıkış Köyü -->
+        <div class="field">
+          <label>Düşmanın Çıkış Köyü (Saldıran)</label>
+          <div class="grid-2">
+            <input type="number" id="dx" placeholder="X (Örn: 9050)" oninput="syncInputs('dx', this.value); canliDusmanSuresiGuncelle();">
+            <input type="number" id="dy" placeholder="Y (Örn: 30950)" oninput="syncInputs('dy', this.value); canliDusmanSuresiGuncelle();">
+          </div>
+        </div>
+
+        <!-- Savunan Köy (Listeden Seçim + Koordinat) -->
+        <div class="field">
+          <label>Saldırılan Yer (Savunan Köy)</label>
+          <select id="savunanBirlik" onchange="syncSavunanBirlik(this.value)" style="margin-bottom: 6px;">
+            <option value="">-- Birlik Seç (Opsiyonel) --</option>
           </select>
-          <select id="savunanKoy" onchange="koyKoorAta('savunanKoy', 'sx', 'sy'); canliDusmanSuresiGuncelle();">
-            <option value="">-- Önce Oyuncu Seç --</option>
+          <div class="grid-2" style="margin-bottom: 6px;">
+            <select id="savunanOyuncu" onchange="syncSavunanOyuncu(this.value)">
+              <option value="">-- Önce Birlik Seç --</option>
+            </select>
+            <select id="savunanKoy" onchange="syncSavunanKoy(this.value)">
+              <option value="">-- Önce Oyuncu Seç --</option>
+            </select>
+          </div>
+          <div class="grid-2">
+            <input type="number" id="sx" placeholder="X" oninput="syncInputs('sx', this.value); canliDusmanSuresiGuncelle();">
+            <input type="number" id="sy" placeholder="Y" oninput="syncInputs('sy', this.value); canliDusmanSuresiGuncelle();">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Düşmanın En Yavaş Birimi</label>
+          <div class="race-select" id="dusmanIrkGroup">
+            <div class="tab-btn active" onclick="setDusmanIrk('HUN', this)">🐺 HUN</div>
+            <div class="tab-btn" onclick="setDusmanIrk('GÖK', this)">🦅 GÖK</div>
+            <div class="tab-btn" onclick="setDusmanIrk('SEL', this)">🏹 SEL</div>
+          </div>
+          <select id="dusmanBirim" onchange="canliDusmanSuresiGuncelle()"></select>
+        </div>
+
+        <!-- SS:DD:SN Kutuları -->
+        <div class="field">
+          <label>Saldırının Vurma / Çarpma Saati (SS : DD : SN)</label>
+          <div class="grid-3">
+            <input type="number" id="savasSaat" placeholder="Saat" min="0" max="23" inputmode="numeric">
+            <input type="number" id="savasDakika" placeholder="Dakika" min="0" max="59" inputmode="numeric">
+            <input type="number" id="savasSaniye" placeholder="Saniye" min="0" max="59" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Düşman Hareketi</label>
+          <div class="tab-group" id="dusmanTarzGroup">
+            <div class="tab-btn active" onclick="setTab('dusmanTarz', 'normal', this)">🟢 Normal Geldi</div>
+            <div class="tab-btn" onclick="setTab('dusmanTarz', 'elmas', this)">💎 Elmas Bastı</div>
+          </div>
+        </div>
+
+        <!-- Canlı Tahmini Geliş Süresi -->
+        <div class="enemy-travel-box">
+          <span class="enemy-travel-label">⏱️ Tahmini Geliş / Yürüyüş Süresi:</span>
+          <span class="enemy-travel-val" id="canliDusmanSure">-</span>
+        </div>
+      </div>
+
+      <!-- 2. Kendi Kilit Bilgilerin -->
+      <div class="card">
+        <div class="card-title">🛡️ Senin Çıkış ve Ordu Bilgilerin</div>
+        
+        <!-- Çıkış Köyü (Birlik -> Oyuncu -> Köy Seçimi) -->
+        <div class="field">
+          <label>Kilidi Atacağın Köyün (Senin Konumun)</label>
+          <select id="kendiBirlik" onchange="birlikSecildi('kendiBirlik', 'kendiOyuncu', 'kendiKoy')" style="margin-bottom: 6px;">
+            <option value="">-- Birlik Seç --</option>
           </select>
+          <div class="grid-2" style="margin-bottom: 6px;">
+            <select id="kendiOyuncu" onchange="oyuncuSecildi('kendiBirlik', 'kendiOyuncu', 'kendiKoy'); kilitKomutanGuncelle();">
+              <option value="">-- Önce Birlik Seç --</option>
+            </select>
+            <select id="kendiKoy" onchange="koyKoorAta('kendiKoy', 'kx', 'ky')">
+              <option value="">-- Önce Oyuncu Seç --</option>
+            </select>
+          </div>
+          <div class="grid-2">
+            <input type="number" id="kx" placeholder="X">
+            <input type="number" id="ky" placeholder="Y">
+          </div>
         </div>
-        <div class="grid-2">
-          <input type="number" id="sx" placeholder="X" oninput="canliDusmanSuresiGuncelle()">
-          <input type="number" id="sy" placeholder="Y" oninput="canliDusmanSuresiGuncelle()">
+
+        <div class="field">
+          <label>Göndereceğin En Yavaş Birim</label>
+          <div class="race-select" id="kendiIrkGroup">
+            <div class="tab-btn active" onclick="setKendiIrk('HUN', this)">🐺 HUN</div>
+            <div class="tab-btn" onclick="setKendiIrk('GÖK', this)">🦅 GÖK</div>
+            <div class="tab-btn" onclick="setKendiIrk('SEL', this)">🏹 SEL</div>
+          </div>
+          <select id="kendiBirim"></select>
+        </div>
+
+        <div class="field">
+          <label>Senin Saldırı Tarzın</label>
+          <div class="tab-group">
+            <div class="tab-btn active" onclick="setTab('kendiTarz', 'normal', this)">🟢 Normal Gideceğim</div>
+            <div class="tab-btn" onclick="setTab('kendiTarz', 'elmas', this)">💎 Elmas Basacağım</div>
+          </div>
         </div>
       </div>
 
-      <div class="field">
-        <label>Düşmanın En Yavaş Birimi</label>
-        <div class="race-select" id="dusmanIrkGroup">
-          <div class="tab-btn active" onclick="setDusmanIrk('HUN', this)">🐺 HUN</div>
-          <div class="tab-btn" onclick="setDusmanIrk('GÖK', this)">🦅 GÖK</div>
-          <div class="tab-btn" onclick="setDusmanIrk('SEL', this)">🏹 SEL</div>
-        </div>
-        <select id="dusmanBirim" onchange="canliDusmanSuresiGuncelle()"></select>
-      </div>
+      <button class="calc-btn" onclick="kilitHesapla()">🔒 KİLİDİ HESAPLA</button>
 
-      <!-- SS:DD:SN Kutuları -->
-      <div class="field">
-        <label>Saldırının Vurma / Çarpma Saati (SS : DD : SN)</label>
-        <div class="grid-3">
-          <input type="number" id="savasSaat" placeholder="Saat" min="0" max="23" inputmode="numeric">
-          <input type="number" id="savasDakika" placeholder="Dakika" min="0" max="59" inputmode="numeric">
-          <input type="number" id="savasSaniye" placeholder="Saniye" min="0" max="59" inputmode="numeric">
+      <!-- Sonuç Kartı -->
+      <div class="card" id="sonucCard">
+        <div class="card-title" id="cardHeaderTitle" style="color: #34d399;">⚔️ Kilit Operasyon Planı</div>
+        
+        <div class="result-row">
+          <span>Düşmanın Dönüş Saati:</span>
+          <span class="result-val" id="resDonus">-</span>
         </div>
-      </div>
-
-      <div class="field">
-        <label>Düşman Hareketi</label>
-        <div class="tab-group">
-          <div class="tab-btn active" onclick="setTab('dusmanTarz', 'normal', this)">🟢 Normal Geldi</div>
-          <div class="tab-btn" onclick="setTab('dusmanTarz', 'elmas', this)">💎 Elmas Bastı</div>
+        <div class="result-row">
+          <span>Senin Gidiş Süren:</span>
+          <span class="result-val" id="resSure">-</span>
         </div>
-      </div>
+        <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+          <span style="font-weight:700;">🚀 ASKER ÇIKIŞ SAATİN:</span>
+          <span class="highlight-time" id="resCikis">-</span>
+        </div>
 
-      <!-- Canlı Tahmini Geliş Süresi -->
-      <div class="enemy-travel-box">
-        <span class="enemy-travel-label">⏱️ Tahmini Geliş / Yürüyüş Süresi:</span>
-        <span class="enemy-travel-val" id="canliDusmanSure">-</span>
+        <div id="warningBadge" class="warning-badge">⚠️ DİKKAT: Çıkış saati geçmişte kaldı! Bu birimle kilide yetişilemez.</div>
+
+        <button class="copy-btn" onclick="kopyalaFis()">📋 Operasyon Fişini Kopyala</button>
       </div>
     </div>
 
-    <!-- 2. Kendi Kilit Bilgilerin -->
-    <div class="card">
-      <div class="card-title">🛡️ Senin Çıkış ve Ordu Bilgilerin</div>
-      
-      <!-- Çıkış Köyü (Birlik -> Oyuncu -> Köy Seçimi) -->
-      <div class="field">
-        <label>Kilidi Atacağın Köyün (Senin Konumun)</label>
-        <select id="kendiBirlik" onchange="birlikSecildi('kendiBirlik', 'kendiOyuncu', 'kendiKoy')" style="margin-bottom: 6px;">
-          <option value="">-- Birlik Seç --</option>
-        </select>
-        <div class="grid-2" style="margin-bottom: 6px;">
-          <select id="kendiOyuncu" onchange="oyuncuSecildi('kendiBirlik', 'kendiOyuncu', 'kendiKoy'); kilitKomutanGuncelle();">
-            <option value="">-- Önce Birlik Seç --</option>
+    <!-- ============================================== -->
+    <!-- 2. SEKME: BİRİM BULUCU (TERSİNE MÜHENDİSLİK) -->
+    <!-- ============================================== -->
+    <div id="bulucuSekme" class="tab-content">
+      <div class="card">
+        <div class="card-title" style="color: var(--info-color);">🔍 Süreye Göre Birim Bulucu</div>
+
+        <!-- Düşmanın Çıkış Köyü -->
+        <div class="field">
+          <label>Düşmanın Çıkış Köyü (Saldıran)</label>
+          <div class="grid-2">
+            <input type="number" id="b_dx" placeholder="X" oninput="syncInputs('b_dx', this.value)">
+            <input type="number" id="b_dy" placeholder="Y" oninput="syncInputs('b_dy', this.value)">
+          </div>
+        </div>
+
+        <!-- 2. Sekmedeki Savunan Köy Listesi -->
+        <div class="field">
+          <label>Saldırılan Yer (Savunan Köy)</label>
+          <select id="b_savunanBirlik" onchange="syncSavunanBirlik(this.value)" style="margin-bottom: 6px;">
+            <option value="">-- Birlik Seç (Opsiyonel) --</option>
           </select>
-          <select id="kendiKoy" onchange="koyKoorAta('kendiKoy', 'kx', 'ky')">
-            <option value="">-- Önce Oyuncu Seç --</option>
-          </select>
+          <div class="grid-2" style="margin-bottom: 6px;">
+            <select id="b_savunanOyuncu" onchange="syncSavunanOyuncu(this.value)">
+              <option value="">-- Önce Birlik Seç --</option>
+            </select>
+            <select id="b_savunanKoy" onchange="syncSavunanKoy(this.value)">
+              <option value="">-- Önce Oyuncu Seç --</option>
+            </select>
+          </div>
+          <div class="grid-2">
+            <input type="number" id="b_sx" placeholder="X" oninput="syncInputs('b_sx', this.value)">
+            <input type="number" id="b_sy" placeholder="Y" oninput="syncInputs('b_sy', this.value)">
+          </div>
         </div>
-        <div class="grid-2">
-          <input type="number" id="kx" placeholder="X">
-          <input type="number" id="ky" placeholder="Y">
+
+        <div class="field">
+          <label>Saldıran Devlet / Irk:</label>
+          <div class="race-select-4" id="analizIrkGroup">
+            <div class="tab-btn active" onclick="setAnalizIrk('ALL', this)">🌍 HEPSİ</div>
+            <div class="tab-btn" onclick="setAnalizIrk('HUN', this)">🐺 HUN</div>
+            <div class="tab-btn" onclick="setAnalizIrk('GÖK', this)">🦅 GÖK</div>
+            <div class="tab-btn" onclick="setAnalizIrk('SEL', this)">🏹 SEL</div>
+          </div>
         </div>
-      </div>
 
-      <div class="field">
-        <label>Göndereceğin En Yavaş Birim</label>
-        <div class="race-select" id="kendiIrkGroup">
-          <div class="tab-btn active" onclick="setKendiIrk('HUN', this)">🐺 HUN</div>
-          <div class="tab-btn" onclick="setKendiIrk('GÖK', this)">🦅 GÖK</div>
-          <div class="tab-btn" onclick="setKendiIrk('SEL', this)">🏹 SEL</div>
+        <div class="field">
+          <label>Oyunda Görünen Toplam Yürüyüş Süresi:</label>
+          <div class="grid-3">
+            <input type="number" id="analizSaat" placeholder="Saat" min="0" inputmode="numeric">
+            <input type="number" id="analizDakika" placeholder="Dakika" min="0" max="59" inputmode="numeric">
+            <input type="number" id="analizSaniye" placeholder="Saniye" min="0" max="59" inputmode="numeric">
+          </div>
         </div>
-        <select id="kendiBirim"></select>
-      </div>
 
-      <div class="field">
-        <label>Senin Saldırı Tarzın</label>
-        <div class="tab-group">
-          <div class="tab-btn active" onclick="setTab('kendiTarz', 'normal', this)">🟢 Normal Gideceğim</div>
-          <div class="tab-btn" onclick="setTab('kendiTarz', 'elmas', this)">💎 Elmas Basacağım</div>
-        </div>
-      </div>
-    </div>
+        <button class="btn-detect" onclick="birimleriAnalizEt()">🔎 En Yakın 5 İhtimali Sırala</button>
 
-    <button class="calc-btn" onclick="kilitHesapla()">🔒 KİLİDİ HESAPLA</button>
-
-    <!-- Sonuç Kartı -->
-    <div class="card" id="sonucCard">
-      <div class="card-title" id="cardHeaderTitle" style="color: #34d399;">⚔️ Kilit Operasyon Planı</div>
-      
-      <div class="result-row">
-        <span>Düşmanın Dönüş Saati:</span>
-        <span class="result-val" id="resDonus">-</span>
+        <div class="detect-results" id="analizSonuclari" style="display:none;"></div>
       </div>
-      <div class="result-row">
-        <span>Senin Gidiş Süren:</span>
-        <span class="result-val" id="resSure">-</span>
-      </div>
-      <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
-        <span style="font-weight:700;">🚀 ASKER ÇIKIŞ SAATİN:</span>
-        <span class="highlight-time" id="resCikis">-</span>
-      </div>
-
-      <div id="warningBadge" class="warning-badge">⚠️ DİKKAT: Çıkış saati geçmişte kaldı! Bu birimle kilide yetişilemez.</div>
-
-      <button class="copy-btn" onclick="kopyalaFis()">📋 Operasyon Fişini Kopyala</button>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // 🗂️ BİRLİK, OYUNCU VE KÖY VERİTABANI
-    // ==========================================
     const BIRLIK_VERITABANI = {
       "TSK / ŞAH": {
         "PlayGame": [
@@ -654,9 +827,64 @@
 
     let seciliDusmanIrk = "HUN";
     let seciliKendiIrk = localStorage.getItem(`targun_irk_${currentUser.id}`) || "HUN";
+    let seciliAnalizIrk = "ALL";
     let dusmanTarz = "normal";
     let kendiTarz = "normal";
     let sonFisMetni = "";
+
+    function syncInputs(id, val) {
+      if (id === 'dx') document.getElementById('b_dx').value = val;
+      if (id === 'dy') document.getElementById('b_dy').value = val;
+      if (id === 'sx') document.getElementById('b_sx').value = val;
+      if (id === 'sy') document.getElementById('b_sy').value = val;
+
+      if (id === 'b_dx') document.getElementById('dx').value = val;
+      if (id === 'b_dy') document.getElementById('dy').value = val;
+      if (id === 'b_sx') document.getElementById('sx').value = val;
+      if (id === 'b_sy') document.getElementById('sy').value = val;
+    }
+
+    // 🔄 İki sekmedeki Savunan Köy Birlik Seçimini Eşitle
+    function syncSavunanBirlik(birlikAdi) {
+      document.getElementById('savunanBirlik').value = birlikAdi;
+      document.getElementById('b_savunanBirlik').value = birlikAdi;
+
+      birlikSecildi('savunanBirlik', 'savunanOyuncu', 'savunanKoy');
+      birlikSecildi('b_savunanBirlik', 'b_savunanOyuncu', 'b_savunanKoy');
+    }
+
+    // 🔄 İki sekmedeki Savunan Köy Oyuncu Seçimini Eşitle
+    function syncSavunanOyuncu(oyuncuAdi) {
+      document.getElementById('savunanOyuncu').value = oyuncuAdi;
+      document.getElementById('b_savunanOyuncu').value = oyuncuAdi;
+
+      oyuncuSecildi('savunanBirlik', 'savunanOyuncu', 'savunanKoy');
+      oyuncuSecildi('b_savunanBirlik', 'b_savunanOyuncu', 'b_savunanKoy');
+    }
+
+    // 🔄 İki sekmedeki Savunan Köy Seçimini ve Koordinatlarını Eşitle
+    function syncSavunanKoy(val) {
+      document.getElementById('savunanKoy').value = val;
+      document.getElementById('b_savunanKoy').value = val;
+
+      if (val) {
+        const [x, y] = val.split(",");
+        document.getElementById('sx').value = x;
+        document.getElementById('sy').value = y;
+        document.getElementById('b_sx').value = x;
+        document.getElementById('b_sy').value = y;
+      }
+
+      canliDusmanSuresiGuncelle();
+    }
+
+    function switchNavTab(tabId, btn) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav-tab-btn").forEach(el => el.classList.remove("active"));
+
+      document.getElementById(tabId).classList.add("active");
+      btn.classList.add("active");
+    }
 
     function birimDoldur(selectId, irk) {
       const select = document.getElementById(selectId);
@@ -671,10 +899,16 @@
 
     function setDusmanIrk(irk, el) {
       seciliDusmanIrk = irk;
-      el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      el.classList.add("active");
+      document.querySelectorAll("#dusmanIrkGroup .tab-btn").forEach(b => b.classList.remove("active"));
+      if (el) el.classList.add("active");
       birimDoldur("dusmanBirim", irk);
       canliDusmanSuresiGuncelle();
+    }
+
+    function setAnalizIrk(irk, el) {
+      seciliAnalizIrk = irk;
+      document.querySelectorAll("#analizIrkGroup .tab-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
     }
 
     function setKendiIrk(irk, el) {
@@ -688,18 +922,25 @@
     function setTab(type, val, el) {
       if (type === "dusmanTarz") {
         dusmanTarz = val;
+        document.querySelectorAll("#dusmanTarzGroup .tab-btn").forEach(b => b.classList.remove("active"));
+        if (el) el.classList.add("active");
         canliDusmanSuresiGuncelle();
       }
-      if (type === "kendiTarz") kendiTarz = val;
-      el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      el.classList.add("active");
+      if (type === "kendiTarz") {
+        kendiTarz = val;
+        el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        el.classList.add("active");
+      }
     }
 
     function birlikleriYukle() {
       const birlikler = Object.keys(BIRLIK_VERITABANI);
-      ["savunanBirlik", "kendiBirlik"].forEach(id => {
+      const listeIdler = ["savunanBirlik", "kendiBirlik", "b_savunanBirlik"];
+
+      listeIdler.forEach(id => {
         const sel = document.getElementById(id);
-        sel.innerHTML = '<option value="">-- Birlik Seç --</option>';
+        if (!sel) return;
+        sel.innerHTML = '<option value="">-- Birlik Seç (Opsiyonel) --</option>';
         birlikler.forEach(birlikAdi => {
           const opt = document.createElement("option");
           opt.value = birlikAdi;
@@ -791,7 +1032,6 @@
       return `${s}:${dkk}:${sn}`;
     }
 
-    // ⚡ CANLI DÜŞMAN YÜRÜYÜŞ SÜRESİNİ HESAPLAYIP GÖSTEREN FONKSİYON
     function canliDusmanSuresiGuncelle() {
       const dx = parseFloat(document.getElementById("dx").value);
       const dy = parseFloat(document.getElementById("dy").value);
@@ -811,6 +1051,122 @@
       }
 
       sureBox.textContent = formatSure(dSure) + (dusmanTarz === "elmas" ? " 💎 (Elmaslı)" : "");
+    }
+
+    function birimleriAnalizEt() {
+      const dx = parseFloat(document.getElementById("b_dx").value);
+      const dy = parseFloat(document.getElementById("b_dy").value);
+      const sx = parseFloat(document.getElementById("b_sx").value);
+      const sy = parseFloat(document.getElementById("b_sy").value);
+
+      if (isNaN(dx) || isNaN(dy) || isNaN(sx) || isNaN(sy)) {
+        alert("Lütfen önce Düşman ve Savunan Köy koordinatlarını eksiksiz girin.");
+        return;
+      }
+
+      const h = parseInt(document.getElementById("analizSaat").value || "0", 10);
+      const m = parseInt(document.getElementById("analizDakika").value || "0", 10);
+      const s = parseInt(document.getElementById("analizSaniye").value || "0", 10);
+      const hedefToplamSaniye = (h * 3600) + (m * 60) + s;
+
+      if (hedefToplamSaniye <= 0) {
+        alert("Lütfen oyunda görünen süreyi girin.");
+        return;
+      }
+
+      const kontrolIrklar = seciliAnalizIrk === "ALL" ? ["HUN", "GÖK", "SEL"] : [seciliAnalizIrk];
+      const ihtimaller = [];
+
+      kontrolIrklar.forEach(irk => {
+        BIRIMLER[irk].forEach(b => {
+          const normSure = sureHesapla(dx, dy, sx, sy, b.speed).toplamSaniye;
+          ihtimaller.push({
+            irk: irk,
+            birimAdi: b.name,
+            speed: b.speed,
+            elmas: false,
+            sure: normSure,
+            fark: normSure - hedefToplamSaniye
+          });
+
+          const elmasSure = Math.floor(normSure / 2);
+          ihtimaller.push({
+            irk: irk,
+            birimAdi: b.name,
+            speed: b.speed,
+            elmas: true,
+            sure: elmasSure,
+            fark: elmasSure - hedefToplamSaniye
+          });
+        });
+      });
+
+      ihtimaller.sort((a, b) => Math.abs(a.fark) - Math.abs(b.fark));
+      const enYakinBes = ihtimaller.slice(0, 5);
+
+      const sonuclarDiv = document.getElementById("analizSonuclari");
+      sonuclarDiv.innerHTML = "";
+      sonuclarDiv.style.display = "flex";
+
+      enYakinBes.forEach((item, index) => {
+        const itemEl = document.createElement("div");
+        itemEl.className = "detect-item";
+        
+        let diffText = "";
+        let diffClass = "diff-close";
+
+        if (item.fark === 0) {
+          diffText = "✅ TAM EŞLEŞME";
+          diffClass = "diff-exact";
+        } else if (item.fark > 0) {
+          diffText = `+${item.fark} sn yavaş (${formatSure(item.sure)})`;
+          if (item.fark > 15) diffClass = "diff-far";
+        } else {
+          diffText = `${item.fark} sn hızlı (${formatSure(item.sure)})`;
+          if (Math.abs(item.fark) > 15) diffClass = "diff-far";
+        }
+
+        const irkEmoji = item.irk === "HUN" ? "🐺" : (item.irk === "GÖK" ? "🦅" : "🏹");
+        const elmasBadge = item.elmas ? "💎 Elmaslı" : "🟢 Normal";
+
+        itemEl.innerHTML = `
+          <div>
+            <span class="detect-tag">${index + 1}. ${irkEmoji} ${item.birimAdi}</span>
+            <span style="color:#94a3b8; font-size:11px; margin-left:4px;">(${elmasBadge})</span>
+          </div>
+          <div class="detect-diff ${diffClass}">${diffText}</div>
+        `;
+
+        itemEl.onclick = () => {
+          otomatikBirimUygulaVeGec(item.irk, item.speed, item.elmas);
+        };
+
+        sonuclarDiv.appendChild(itemEl);
+      });
+    }
+
+    function otomatikBirimUygulaVeGec(irk, speed, elmasli) {
+      document.querySelectorAll("#dusmanIrkGroup .tab-btn").forEach(btn => {
+        if (btn.textContent.includes(irk)) {
+          setDusmanIrk(irk, btn);
+        }
+      });
+
+      document.getElementById("dusmanBirim").value = speed;
+
+      const tarzVal = elmasli ? "elmas" : "normal";
+      document.querySelectorAll("#dusmanTarzGroup .tab-btn").forEach(btn => {
+        if ((elmasli && btn.textContent.includes("Elmas")) || (!elmasli && btn.textContent.includes("Normal"))) {
+          setTab("dusmanTarz", tarzVal, btn);
+        }
+      });
+
+      canliDusmanSuresiGuncelle();
+
+      const kilitSekmeBtn = document.querySelectorAll(".nav-tab-btn")[0];
+      switchNavTab('kilitSekme', kilitSekmeBtn);
+
+      alert(`Seçim Kilit Ekranına Aktarıldı:\n${irk} - Birim Hızı: ${speed} (${elmasli ? "Elmaslı" : "Normal"})`);
     }
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -836,10 +1192,9 @@
         document.getElementById("kendiOyuncu").value = "PlayGame";
         oyuncuSecildi("kendiBirlik", "kendiOyuncu", "kendiKoy");
 
-        document.getElementById("savunanBirlik").value = "TSK / ŞAH";
-        birlikSecildi("savunanBirlik", "savunanOyuncu", "savunanKoy");
-        document.getElementById("savunanOyuncu").value = "PlayGame";
-        oyuncuSecildi("savunanBirlik", "savunanOyuncu", "savunanKoy");
+        // Savunan tarafı her iki sekmede de TSK / ŞAH -> PlayGame olarak başlat
+        syncSavunanBirlik("TSK / ŞAH");
+        syncSavunanOyuncu("PlayGame");
         
         kilitKomutanGuncelle();
       }
@@ -968,5 +1323,7 @@
       document.body.removeChild(textarea);
     }
   </script>
+</body>
+</html>
 </body>
 </html>
