@@ -844,7 +844,6 @@
       if (id === 'b_sy') document.getElementById('sy').value = val;
     }
 
-    // 🔄 İki sekmedeki Savunan Köy Birlik Seçimini Eşitle
     function syncSavunanBirlik(birlikAdi) {
       document.getElementById('savunanBirlik').value = birlikAdi;
       document.getElementById('b_savunanBirlik').value = birlikAdi;
@@ -853,7 +852,6 @@
       birlikSecildi('b_savunanBirlik', 'b_savunanOyuncu', 'b_savunanKoy');
     }
 
-    // 🔄 İki sekmedeki Savunan Köy Oyuncu Seçimini Eşitle
     function syncSavunanOyuncu(oyuncuAdi) {
       document.getElementById('savunanOyuncu').value = oyuncuAdi;
       document.getElementById('b_savunanOyuncu').value = oyuncuAdi;
@@ -862,7 +860,6 @@
       oyuncuSecildi('b_savunanBirlik', 'b_savunanOyuncu', 'b_savunanKoy');
     }
 
-    // 🔄 İki sekmedeki Savunan Köy Seçimini ve Koordinatlarını Eşitle
     function syncSavunanKoy(val) {
       document.getElementById('savunanKoy').value = val;
       document.getElementById('b_savunanKoy').value = val;
@@ -1053,6 +1050,8 @@
       sureBox.textContent = formatSure(dSure) + (dusmanTarz === "elmas" ? " 💎 (Elmaslı)" : "");
     }
 
+    // 🔍 DÜZELTİLEN AKILLI BİRİM ANALİZ MOTORU:
+    // Görünen süreden 60 saniyeden daha hızlı olan (imkansız) birimleri eler!
     function birimleriAnalizEt() {
       const dx = parseFloat(document.getElementById("b_dx").value);
       const dy = parseFloat(document.getElementById("b_dy").value);
@@ -1079,34 +1078,52 @@
 
       kontrolIrklar.forEach(irk => {
         BIRIMLER[irk].forEach(b => {
+          // 1. Normal yürüyüş
           const normSure = sureHesapla(dx, dy, sx, sy, b.speed).toplamSaniye;
-          ihtimaller.push({
-            irk: irk,
-            birimAdi: b.name,
-            speed: b.speed,
-            elmas: false,
-            sure: normSure,
-            fark: normSure - hedefToplamSaniye
-          });
+          const farkNorm = normSure - hedefToplamSaniye;
+          
+          // Mantık Filtresi: En fazla 60 saniye daha hızlı olabilir (fark >= -60)
+          if (farkNorm >= -60) {
+            ihtimaller.push({
+              irk: irk,
+              birimAdi: b.name,
+              speed: b.speed,
+              elmas: false,
+              sure: normSure,
+              fark: farkNorm
+            });
+          }
 
+          // 2. Elmaslı yürüyüş
           const elmasSure = Math.floor(normSure / 2);
-          ihtimaller.push({
-            irk: irk,
-            birimAdi: b.name,
-            speed: b.speed,
-            elmas: true,
-            sure: elmasSure,
-            fark: elmasSure - hedefToplamSaniye
-          });
+          const farkElmas = elmasSure - hedefToplamSaniye;
+
+          // Mantık Filtresi: En fazla 60 saniye daha hızlı olabilir (fark >= -60)
+          if (farkElmas >= -60) {
+            ihtimaller.push({
+              irk: irk,
+              birimAdi: b.name,
+              speed: b.speed,
+              elmas: true,
+              sure: elmasSure,
+              fark: farkElmas
+            });
+          }
         });
       });
-
-      ihtimaller.sort((a, b) => Math.abs(a.fark) - Math.abs(b.fark));
-      const enYakinBes = ihtimaller.slice(0, 5);
 
       const sonuclarDiv = document.getElementById("analizSonuclari");
       sonuclarDiv.innerHTML = "";
       sonuclarDiv.style.display = "flex";
+
+      if (ihtimaller.length === 0) {
+        sonuclarDiv.innerHTML = `<div style="color:var(--danger-color); font-size:12px; padding:8px; text-align:center;">Girdiğiniz mesafede bu süreden daha yavaş olan geçerli bir birim bulunamadı.</div>`;
+        return;
+      }
+
+      // Farkın mutlak değerine göre en yakından başlayarak sırala
+      ihtimaller.sort((a, b) => Math.abs(a.fark) - Math.abs(b.fark));
+      const enYakinBes = ihtimaller.slice(0, 5);
 
       enYakinBes.forEach((item, index) => {
         const itemEl = document.createElement("div");
@@ -1120,10 +1137,10 @@
           diffClass = "diff-exact";
         } else if (item.fark > 0) {
           diffText = `+${item.fark} sn yavaş (${formatSure(item.sure)})`;
-          if (item.fark > 15) diffClass = "diff-far";
+          if (item.fark > 30) diffClass = "diff-far";
         } else {
-          diffText = `${item.fark} sn hızlı (${formatSure(item.sure)})`;
-          if (Math.abs(item.fark) > 15) diffClass = "diff-far";
+          diffText = `${Math.abs(item.fark)} sn daha hızlı (${formatSure(item.sure)})`;
+          diffClass = "diff-close";
         }
 
         const irkEmoji = item.irk === "HUN" ? "🐺" : (item.irk === "GÖK" ? "🦅" : "🏹");
@@ -1192,7 +1209,6 @@
         document.getElementById("kendiOyuncu").value = "PlayGame";
         oyuncuSecildi("kendiBirlik", "kendiOyuncu", "kendiKoy");
 
-        // Savunan tarafı her iki sekmede de TSK / ŞAH -> PlayGame olarak başlat
         syncSavunanBirlik("TSK / ŞAH");
         syncSavunanOyuncu("PlayGame");
         
