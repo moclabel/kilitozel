@@ -372,6 +372,15 @@
       color: #f87171;
     }
 
+    .sapma-notu {
+      font-size: 11px;
+      color: #facc15;
+      font-weight: 600;
+      text-align: right;
+      margin-top: 2px;
+      letter-spacing: 0.2px;
+    }
+
     .warning-badge {
       display: none;
       background: rgba(239, 68, 68, 0.2);
@@ -546,7 +555,10 @@
         </div>
         <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
           <span style="font-weight:700;">🚀 ASKER ÇIKIŞ SAATİN:</span>
-          <span class="highlight-time" id="resCikis">-</span>
+          <div style="display:flex; flex-direction:column; align-items:flex-end;">
+            <span class="highlight-time" id="resCikis">-</span>
+            <span class="sapma-notu">(+2 saniye sapma payı eklenmesi önerilir)</span>
+          </div>
         </div>
 
         <div id="warningBadge" class="warning-badge">⚠️ DİKKAT: Çıkış saati geçmişte kaldı! Bu birimle kilide yetişilemez.</div>
@@ -1050,8 +1062,6 @@
       sureBox.textContent = formatSure(dSure) + (dusmanTarz === "elmas" ? " 💎 (Elmaslı)" : "");
     }
 
-    // 🔍 DÜZELTİLEN AKILLI BİRİM ANALİZ MOTORU:
-    // Görünen süreden 60 saniyeden daha hızlı olan (imkansız) birimleri eler!
     function birimleriAnalizEt() {
       const dx = parseFloat(document.getElementById("b_dx").value);
       const dy = parseFloat(document.getElementById("b_dy").value);
@@ -1078,11 +1088,9 @@
 
       kontrolIrklar.forEach(irk => {
         BIRIMLER[irk].forEach(b => {
-          // 1. Normal yürüyüş
           const normSure = sureHesapla(dx, dy, sx, sy, b.speed).toplamSaniye;
           const farkNorm = normSure - hedefToplamSaniye;
           
-          // Mantık Filtresi: En fazla 60 saniye daha hızlı olabilir (fark >= -60)
           if (farkNorm >= -60) {
             ihtimaller.push({
               irk: irk,
@@ -1094,11 +1102,9 @@
             });
           }
 
-          // 2. Elmaslı yürüyüş
           const elmasSure = Math.floor(normSure / 2);
           const farkElmas = elmasSure - hedefToplamSaniye;
 
-          // Mantık Filtresi: En fazla 60 saniye daha hızlı olabilir (fark >= -60)
           if (farkElmas >= -60) {
             ihtimaller.push({
               irk: irk,
@@ -1121,7 +1127,6 @@
         return;
       }
 
-      // Farkın mutlak değerine göre en yakından başlayarak sırala
       ihtimaller.sort((a, b) => Math.abs(a.fark) - Math.abs(b.fark));
       const enYakinBes = ihtimaller.slice(0, 5);
 
@@ -1302,7 +1307,7 @@
                     `💂 Birim: ${secilenBirimAdi}\n` +
                     `⏱️ Düşman Yürüyüş Süresi: ${formatSure(dusmanSure)}\n` +
                     `🕒 İniş / Kilit Saati: ${formatSaat(varisDate)}\n` +
-                    `🚀 Asker Çıkış Saati: ${formatSaat(cikisDate)}` +
+                    `🚀 Asker Çıkış Saati: ${formatSaat(cikisDate)} (+2 saniye sapma payı eklenmesi önerilir)` +
                     (gecKalindi ? `\n⚠️ DİKKAT: Çıkış zamanı geçmiştir!` : ``);
 
       card.style.display = "block";
